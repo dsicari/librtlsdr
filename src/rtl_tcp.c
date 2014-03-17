@@ -2,6 +2,7 @@
  * rtl-sdr, turns your Realtek RTL2832 based DVB dongle into a SDR receiver
  * Copyright (C) 2012 by Steve Markgraf <steve@steve-m.de>
  * Copyright (C) 2012-2013 by Hoernchen <la@tfc-server.de>
+ * Frequency Lock [-l] Copyright (C) 2014 by Mario Rößler
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -83,6 +84,8 @@ static struct llist *ll_buffers = 0;
 static int llbuf_num = 500;
 
 static volatile int do_exit = 0;
+
+int freq_lock = 0;
 
 void usage(void)
 {
@@ -304,7 +307,9 @@ static void *command_worker(void *arg)
 		switch(cmd.cmd) {
 		case 0x01:
 			printf("set freq %d\n", ntohl(cmd.param));
-			rtlsdr_set_center_freq(dev,ntohl(cmd.param));
+			if(!freq_lock) {
+			    rtlsdr_set_center_freq(dev,ntohl(cmd.param));
+			}
 			break;
 		case 0x02:
 			printf("set sample rate %d\n", ntohl(cmd.param));
@@ -391,7 +396,7 @@ int main(int argc, char **argv)
 	struct sigaction sigact, sigign;
 #endif
 
-	while ((opt = getopt(argc, argv, "a:p:f:g:s:b:n:d:P:")) != -1) {
+	while ((opt = getopt(argc, argv, "a:p:f:g:s:b:n:d:P:l:")) != -1) {
 		switch (opt) {
 		case 'd':
 			dev_index = verbose_device_search(optarg);
@@ -421,6 +426,9 @@ int main(int argc, char **argv)
 		case 'P':
 			ppm_error = atoi(optarg);
 			break;
+	    case 'l':
+            freq_lock = atoi(optarg);
+            break;
 		default:
 			usage();
 			break;
