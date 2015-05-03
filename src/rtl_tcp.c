@@ -93,6 +93,7 @@ void usage(void)
 		"Usage:\t[-a listen address]\n"
 		"\t[-p listen port (default: 1234)]\n"
 		"\t[-f frequency to tune to [Hz]]\n"
+		"\t[-l 1] lock frequency against tcp command\n"
 		"\t[-g gain (default: 0 for auto)]\n"
 		"\t[-s samplerate in Hz (default: 2048000 Hz)]\n"
 		"\t[-b number of buffers (default: 15, set by library)]\n"
