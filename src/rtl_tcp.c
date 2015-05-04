@@ -3,6 +3,7 @@
  * Copyright (C) 2012 by Steve Markgraf <steve@steve-m.de>
  * Copyright (C) 2012-2013 by Hoernchen <la@tfc-server.de>
  * Frequency Lock [-l] Copyright (C) 2014 by Mario Rößler
+ * Direct Sampling Flag [-q] by Phil Crump <phil@philcrump.co.uk>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -86,6 +87,7 @@ static int llbuf_num = 500;
 static volatile int do_exit = 0;
 
 int freq_lock = 0;
+int direct_sampling = 0;
 
 void usage(void)
 {
@@ -94,6 +96,7 @@ void usage(void)
 		"\t[-p listen port (default: 1234)]\n"
 		"\t[-f frequency to tune to [Hz]]\n"
 		"\t[-l 1] lock frequency against tcp command\n"
+		"\t[-q x] enable direct sampling (input I:1, Q:2)\n"
 		"\t[-g gain (default: 0 for auto)]\n"
 		"\t[-s samplerate in Hz (default: 2048000 Hz)]\n"
 		"\t[-b number of buffers (default: 15, set by library)]\n"
@@ -343,7 +346,10 @@ static void *command_worker(void *arg)
 			break;
 		case 0x09:
 			printf("set direct sampling %d\n", ntohl(cmd.param));
-			rtlsdr_set_direct_sampling(dev, ntohl(cmd.param));
+			/* Pass through unless we've set it manually */
+			if(!direct_sampling) {
+			    rtlsdr_set_direct_sampling(dev, ntohl(cmd.param));
+			}
 			break;
 		case 0x0a:
 			printf("set offset tuning %d\n", ntohl(cmd.param));
@@ -397,7 +403,7 @@ int main(int argc, char **argv)
 	struct sigaction sigact, sigign;
 #endif
 
-	while ((opt = getopt(argc, argv, "a:p:f:g:s:b:n:d:P:l:")) != -1) {
+	while ((opt = getopt(argc, argv, "a:p:f:g:s:b:n:d:P:l:q:")) != -1) {
 		switch (opt) {
 		case 'd':
 			dev_index = verbose_device_search(optarg);
@@ -427,9 +433,12 @@ int main(int argc, char **argv)
 		case 'P':
 			ppm_error = atoi(optarg);
 			break;
-	    case 'l':
-            freq_lock = atoi(optarg);
-            break;
+		case 'l':
+			freq_lock = atoi(optarg);
+			break;
+		case 'q':
+			direct_sampling = atoi(optarg);
+			break;
 		default:
 			usage();
 			break;
@@ -480,6 +489,11 @@ int main(int argc, char **argv)
 		fprintf(stderr, "WARNING: Failed to set center freq.\n");
 	else
 		fprintf(stderr, "Tuned to %i Hz.\n", frequency);
+
+	if (0 != direct_sampling) {
+		/* Set direct sampling */
+		rtlsdr_set_direct_sampling(dev, direct_sampling);
+	}
 
 	if (0 == gain) {
 		 /* Enable automatic gain */
