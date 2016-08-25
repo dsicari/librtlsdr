@@ -310,10 +310,12 @@ static void *command_worker(void *arg)
 		}
 		switch(cmd.cmd) {
 		case 0x01:
-			printf("set freq %d\n", ntohl(cmd.param));
 			if(!freq_lock) {
+			    printf("set freq %d\n", ntohl(cmd.param));
 			    rtlsdr_set_center_freq(dev,ntohl(cmd.param));
-			}
+			} else {
+                            printf("ignoring set freq (%d) due to lock flag\n", ntohl(cmd.param));
+                        }
 			break;
 		case 0x02:
 			printf("set sample rate %d\n", ntohl(cmd.param));
