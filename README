@@ -7,7 +7,7 @@ http://sdr.osmocom.org/trac/wiki/rtl-sdr
 
 ## Dependencies
 
-build-essential, cmake, libusb-1.0-0-dev
+build-essential, cmake, libusb-1.0-0-dev, pkg-config
 
 ## Install
 
